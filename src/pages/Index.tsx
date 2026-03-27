@@ -8,7 +8,7 @@ interface Message {
   timestamp: Date;
 }
 
-const MAHITO_AVATAR = "https://cdn.poehali.dev/projects/884f2e30-0100-4d08-ae51-60ed92bdee29/files/dda64cce-9e95-4d99-ae30-fdb49232d4d1.jpg";
+const MAHITO_AVATAR = "https://cdn.poehali.dev/projects/884f2e30-0100-4d08-ae51-60ed92bdee29/bucket/02e7cfbc-4805-407a-8e91-ab6c9d9a48ed.jpg";
 
 const SAMPLE_RESPONSES = [
   "Хм... Ты осмелился заговорить со мной? Интересно. Очень интересно. Может, твоя форма тоже заслуживает... переосмысления?",
