@@ -30,40 +30,15 @@ export default function Index() {
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [volume, setVolume] = useState(80);
-  const [isMuted, setIsMuted] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "history">("chat");
   const [showSettings, setShowSettings] = useState(false);
-  const [speedIdx, setSpeedIdx] = useState(1);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
-
-  const speak = (text: string, rate: number, vol: number) => {
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "ru-RU";
-    utter.rate = rate;
-    utter.pitch = 0.6;
-    utter.volume = vol / 100;
-
-    const voices = window.speechSynthesis.getVoices();
-    const ruVoice = voices.find((v) => v.lang.startsWith("ru"));
-    if (ruVoice) utter.voice = ruVoice;
-
-    utter.onstart = () => setIsSpeaking(true);
-    utter.onend = () => setIsSpeaking(false);
-    utter.onerror = () => setIsSpeaking(false);
-
-    utteranceRef.current = utter;
-    window.speechSynthesis.speak(utter);
-  };
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -88,11 +63,6 @@ export default function Index() {
     };
     setIsTyping(false);
     setMessages((prev) => [...prev, mahitoMsg]);
-
-    if (!isMuted) {
-      const rateMap = [0.75, 1.0, 1.3];
-      speak(response, rateMap[speedIdx], volume);
-    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -113,8 +83,6 @@ export default function Index() {
 
   const formatTime = (d: Date) =>
     d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
-
-  const speeds = ["медленно", "норма", "быстро"];
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-background hex-pattern scanline">
@@ -171,7 +139,7 @@ export default function Index() {
                   style={{
                     background: i % 2 === 0 ? "hsl(195 90% 65%)" : "hsl(270 60% 60%)",
                     transform: `rotate(${deg}deg) translateX(90px)`,
-                    opacity: isSpeaking ? 0.9 : 0.3,
+                    opacity: 0.3,
                     transition: "opacity 0.3s ease",
                     boxShadow: `0 0 8px ${i % 2 === 0 ? "hsl(195 90% 65%)" : "hsl(270 60% 60%)"}`,
                     animation: `orb-spin ${6 + i}s linear infinite`,
@@ -185,11 +153,8 @@ export default function Index() {
             <div
               className="relative w-44 h-44 rounded-full overflow-hidden animate-float"
               style={{
-                border: `2px solid ${isSpeaking ? "hsl(195 90% 55%)" : "hsl(195 90% 55% / 0.3)"}`,
-                boxShadow: isSpeaking
-                  ? "0 0 30px hsl(195 90% 55% / 0.6), 0 0 80px hsl(270 60% 50% / 0.3)"
-                  : "0 0 20px hsl(195 90% 55% / 0.2), 0 0 50px hsl(270 60% 50% / 0.1)",
-                transition: "all 0.4s ease",
+                border: "2px solid hsl(195 90% 55% / 0.3)",
+                boxShadow: "0 0 20px hsl(195 90% 55% / 0.2), 0 0 50px hsl(270 60% 50% / 0.1)",
               }}
             >
               <img
@@ -197,16 +162,6 @@ export default function Index() {
                 alt="Махито"
                 className="w-full h-full object-cover object-top"
               />
-              {isSpeaking && (
-                <div
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, hsl(195 90% 55% / 0.15) 0%, transparent 50%, hsl(270 60% 50% / 0.1) 100%)",
-                    animation: "pulse-cursed 1.5s ease-in-out infinite",
-                  }}
-                />
-              )}
             </div>
 
             {/* Name */}
@@ -221,87 +176,17 @@ export default function Index() {
                 <div
                   className="w-1.5 h-1.5 rounded-full"
                   style={{
-                    background: isSpeaking
-                      ? "hsl(195 90% 55%)"
-                      : "hsl(195 90% 55% / 0.4)",
-                    boxShadow: isSpeaking ? "0 0 6px hsl(195 90% 55%)" : "none",
-                    transition: "all 0.3s ease",
+                    background: "hsl(195 90% 55% / 0.4)",
                   }}
                 />
                 <span className="font-rajdhani text-xs text-muted-foreground tracking-widest uppercase">
-                  {isSpeaking ? "говорит" : isTyping ? "думает" : "ждёт"}
+                  {isTyping ? "думает" : "ждёт"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Sound controls */}
-          <div className="w-full space-y-3">
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-rajdhani text-xs text-muted-foreground tracking-widest uppercase">
-                Звук
-              </span>
-              <button
-                onClick={() => {
-                  setIsMuted((v) => {
-                    if (!v) window.speechSynthesis.cancel();
-                    return !v;
-                  });
-                }}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Icon name={isMuted ? "VolumeX" : "Volume2"} size={14} />
-              </button>
-            </div>
-
-            {/* Volume bar */}
-            <div
-              className="relative h-1 rounded-full bg-white/10 cursor-pointer"
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect();
-                const pct = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-                setVolume(Math.max(0, Math.min(100, pct)));
-              }}
-            >
-              <div
-                className="absolute left-0 top-0 h-full rounded-full transition-all"
-                style={{
-                  width: `${isMuted ? 0 : volume}%`,
-                  background: "linear-gradient(90deg, hsl(270 60% 50%), hsl(195 90% 55%))",
-                }}
-              />
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/30 transition-all"
-                style={{
-                  left: `calc(${isMuted ? 0 : volume}% - 6px)`,
-                  background: "hsl(195 90% 55%)",
-                  boxShadow: "0 0 8px hsl(195 90% 55% / 0.6)",
-                }}
-              />
-            </div>
-
-            {/* Speed */}
-            <div className="flex gap-1.5">
-              {speeds.map((label, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSpeedIdx(i)}
-                  className="flex-1 font-rajdhani text-xs py-1 rounded transition-all"
-                  style={{
-                    background:
-                      speedIdx === i ? "hsl(195 90% 55% / 0.2)" : "transparent",
-                    border: `1px solid ${speedIdx === i ? "hsl(195 90% 55% / 0.4)" : "hsl(240 14% 15%)"}`,
-                    color:
-                      speedIdx === i
-                        ? "hsl(195 90% 65%)"
-                        : "hsl(220 15% 45%)",
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <div className="w-full" />
         </div>
 
         {/* Right Panel */}
