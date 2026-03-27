@@ -39,10 +39,31 @@ export default function Index() {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  const speak = (text: string, rate: number, vol: number) => {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "ru-RU";
+    utter.rate = rate;
+    utter.pitch = 0.6;
+    utter.volume = vol / 100;
+
+    const voices = window.speechSynthesis.getVoices();
+    const ruVoice = voices.find((v) => v.lang.startsWith("ru"));
+    if (ruVoice) utter.voice = ruVoice;
+
+    utter.onstart = () => setIsSpeaking(true);
+    utter.onend = () => setIsSpeaking(false);
+    utter.onerror = () => setIsSpeaking(false);
+
+    utteranceRef.current = utter;
+    window.speechSynthesis.speak(utter);
+  };
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -68,8 +89,10 @@ export default function Index() {
     setIsTyping(false);
     setMessages((prev) => [...prev, mahitoMsg]);
 
-    setIsSpeaking(true);
-    setTimeout(() => setIsSpeaking(false), 3000);
+    if (!isMuted) {
+      const rateMap = [0.75, 1.0, 1.3];
+      speak(response, rateMap[speedIdx], volume);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -219,7 +242,12 @@ export default function Index() {
                 Звук
               </span>
               <button
-                onClick={() => setIsMuted((v) => !v)}
+                onClick={() => {
+                  setIsMuted((v) => {
+                    if (!v) window.speechSynthesis.cancel();
+                    return !v;
+                  });
+                }}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Icon name={isMuted ? "VolumeX" : "Volume2"} size={14} />
