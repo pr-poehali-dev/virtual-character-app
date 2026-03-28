@@ -10,13 +10,7 @@ interface Message {
 
 const MAHITO_AVATAR = "https://cdn.poehali.dev/projects/884f2e30-0100-4d08-ae51-60ed92bdee29/bucket/02e7cfbc-4805-407a-8e91-ab6c9d9a48ed.jpg";
 
-const SAMPLE_RESPONSES = [
-  "Хм... Ты осмелился заговорить со мной? Интересно. Очень интересно. Может, твоя форма тоже заслуживает... переосмысления?",
-  "Ах, ты думаешь, что понимаешь меня? Людская душа — такая хрупкая вещь. Я могу изменить её в любой момент.",
-  "Сердца людей полны страха и уродства. Это я вижу. Именно поэтому я так... свободен от них.",
-  "Проклятые духи существуют из-за людских эмоций. Мы — отражение вашей ненависти. Красиво, не правда ли?",
-  "Ты задаёшь интересные вопросы. Но помни — я не тот, кто даёт ответы. Я тот, кто задаёт вопросы телам.",
-];
+const MAHITO_CHAT_URL = "https://functions.poehali.dev/287c2e86-db50-4a41-9cb5-e55df7723344";
 
 export default function Index() {
   const [messages, setMessages] = useState<Message[]>([
@@ -52,13 +46,19 @@ export default function Index() {
     setInput("");
     setIsTyping(true);
 
-    await new Promise((r) => setTimeout(r, 1200 + Math.random() * 800));
-
-    const response = SAMPLE_RESPONSES[Math.floor(Math.random() * SAMPLE_RESPONSES.length)];
+    const res = await fetch(MAHITO_CHAT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: text.trim(),
+        history: messages.map((m) => ({ role: m.role, text: m.text })),
+      }),
+    });
+    const data = await res.json();
     const mahitoMsg: Message = {
       id: (Date.now() + 1).toString(),
       role: "mahito",
-      text: response,
+      text: data.reply || "...",
       timestamp: new Date(),
     };
     setIsTyping(false);
