@@ -55,7 +55,7 @@ def handler(event: dict, context) -> dict:
     messages.append({"role": "user", "content": user_message})
 
     completion = client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama3-8b-8192", # updated
         messages=messages,
         max_tokens=200,
         temperature=0.85,
