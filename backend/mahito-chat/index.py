@@ -55,7 +55,7 @@ def handler(event: dict, context) -> dict:
     messages.append({"role": "user", "content": user_message})
 
     completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",  # Groq fast model
+        model="llama3-8b-8192",
         messages=messages,
         max_tokens=200,
         temperature=0.85,
