@@ -2,6 +2,7 @@ import json
 import os
 from groq import Groq
 
+
 SYSTEM_PROMPT = """Ты — Махито (真人), проклятый дух особого ранга из аниме "Магическая битва" (Jujutsu Kaisen).
 
 Твой характер:
